@@ -7,68 +7,245 @@
     <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos personalizados para el scroll y el contenedor principal */
-        #chat-window {
-            overflow-y: auto;
-            /* Estilo para la barra de desplazamiento */
-            scrollbar-width: none; /* Firefox */
-        }
-        #chat-window::-webkit-scrollbar {
-            display: none; /* Chrome, Safari */
+        /* ========================================= */
+        /* 1. DEFINICIÓN DE VARIABLES Y COLORES BASE */
+        /* ========================================= */
+        :root {
+            /* Colores de tu estilo (Bot/Respuesta) - VÍVIDO */
+            --accent-2: #33d4ff; /* Cian Brillante */
+            /* Colores de tu estilo (Usuario/Envía) - VÍVIDO */
+            --accent: #ff4d4d;    /* Rojo-Coral Brillante */
+            
+            /* Colores de Tema Oscuro de QuickSecure */
+            --bg1: #1a1a2e; /* Fondo principal oscuro */
+            --bg2: #0f0f1d; /* Fondo de contenedor de chat más oscuro */
+            --text-light: #eaf6ff;
+            --text-muted: rgba(234, 246, 255, 0.7);
+
+            /* Radios de borde */
+            --radius: 12px;
+
+            /* Colores de Prioridad (Ajustados para ser más intensos) */
+            --color-critical: #cc0000; /* Rojo Crítico más profundo */
+            --color-medium: #ffdd57;
+            --color-low: #48c74; /* Verde */
         }
 
-        /* Estilos de los mensajes */
+        /* Aplicación del tema oscuro al cuerpo */
+        body {
+            background-color: var(--bg1);
+            color: var(--text-light);
+            /* FUENTE CONSISTENTE: Aplicada a todo el body para herencia uniforme */
+            font-family: 'Inter', sans-serif; 
+            transition: background-color 0.3s;
+        }
+
+        /* Estilo de la cabecera */
+        .app-header {
+            background-color: var(--bg2);
+            border-bottom: 2px solid var(--accent-2);
+        }
+
+        /* ========================================= */
+        /* 2. ESTILOS DE CHAT (VIBRANTES) */
+        /* ========================================= */
+
+        /* Chat container - Aplicado a #chat-window */
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: var(--radius);
+            padding: 1rem;
+            background: var(--bg2); 
+            display: flex; 
+            flex-direction: column;
+        }
+
+        /* Contenedor del Chatbot principal */
+        #chatbot-container {
+            background-color: var(--bg2);
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Estilos base del mensaje - USO DEL MISMO FONT-WEIGHT PARA UNIFORMIDAD */
         .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: var(--radius);
             max-width: 80%;
             word-wrap: break-word;
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 0.5rem;
-            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4); 
+            animation: slideIn 0.3s ease-out;
+            line-height: 1.4;
+            font-weight: 500; /* Peso estándar para legibilidad en Dark Mode */
+            /* Contorno sutil en todo el texto del mensaje */
+            text-shadow: 0 0 1px rgba(0,0,0,0.2); 
         }
 
-        .bot-message {
-            align-self: flex-start;
-            border-bottom-left-radius: 0.25rem; /* rounded-bl-sm */
-            background-color: #e0f7fa; /* teal-50 equivalente */
-            color: #00796b; /* teal-800 equivalente */
-        }
-
-        .user-message {
-            align-self: flex-end;
+        /* Mensaje del usuario (Remitente) - GRADIENTE ROJO INTENSO */
+        .message.user {
+            background: linear-gradient(135deg, var(--accent), #ff7b7b); 
+            color: white;
             margin-left: auto;
-            border-bottom-right-radius: 0.25rem; /* rounded-br-sm */
-            background-color: #d1fae5; /* green-100 equivalente */
-            color: #10b981; /* green-500 equivalente */
+            align-self: flex-end; 
+            text-align: right;
+            border-bottom-right-radius: 4px; 
+        }
+
+        /* Mensaje del bot (Operador/Respuesta) - GRADIENTE AZUL CONSISTENTE */
+        .message.bot {
+            background: linear-gradient(135deg, #0099ff, var(--accent-2)); 
+            color: white; 
+            align-self: flex-start; 
+            border-bottom-left-radius: 4px; 
+        }
+        
+        /* Mensaje de sistema (sin cambios) */
+        .message.system {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 100%;
+            font-style: italic;
+            border: 1px solid rgba(255,255,255,0.1);
+            align-self: center;
+        }
+
+        /* Contorno para Negrita (énfasis) - PESO 700 ESTÁNDAR */
+        .message-content strong {
+            font-weight: 700; 
+            /* Sombra fuerte para hacer que el texto resalte */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); 
+        }
+
+        /* Área de input */
+        #input-area {
+            background-color: var(--bg2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #user-input {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-light);
+            transition: border-color 0.3s;
+        }
+
+        #user-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Contorno del campo de texto a color rojo del usuario */
+        #user-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 77, 77, 0.5);
+        }
+
+        /* Botón de envío a color rojo del usuario */
+        #send-btn {
+            background: linear-gradient(45deg, var(--accent), #ff7b7b);
+            color: var(--bg1);
+            box-shadow: 0 4px 15px rgba(255, 77, 77, 0.4);
+        }
+        #send-btn:hover {
+            background: linear-gradient(45deg, #ff7b7b, var(--accent));
+            box-shadow: 0 6px 20px rgba(255, 77, 77, 0.6);
+        }
+
+        /* Scrollbar personalizado (sin cambios) */
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: var(--accent-2);
+            border-radius: 3px;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        /* ========================================= */
+        /* 3. ESTILOS DE PRIORIDAD (SOLO EFECTOS)    */
+        /* ========================================= */
+
+        /* Animación de Pulso (CRÍTICA) - MÁS RÁPIDA */
+        @keyframes pulse-text {
+            0% { text-shadow: 0 0 1px var(--color-critical); }
+            50% { text-shadow: 0 0 8px var(--color-critical), 0 0 4px var(--accent); }
+            100% { text-shadow: 0 0 1px var(--color-critical); }
+        }
+
+        /* Animación de entrada de mensajes (sin cambios) */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estilo para Fuego/Médico (CRÍTICO) - SOLO EFECTO VISUAL, NO FONT-WEIGHT */
+        .emergency-priority-critical {
+            color: white !important;
+            /* Se elimina font-weight: 700; */
+            animation: pulse-text 1.2s infinite; 
+            text-shadow: 0 0 3px var(--color-critical); 
+        }
+        
+        /* Estilo para Policía (ALTA) - SOLO EFECTO VISUAL, NO FONT-WEIGHT */
+        .emergency-priority-high {
+            color: white !important;
+            /* Se elimina font-weight: 600; */
+        }
+
+        /* Estilo para Tránsito (MEDIA) - SOLO EFECTO VISUAL, NO FONT-WEIGHT */
+        .emergency-priority-medium {
+            color: white !important; 
+            /* Se elimina font-weight: 500; */
+        }
+
+        /* Estilo para Saludo/Despedida (BAJA) - SOLO EFECTO VISUAL, NO FONT-WEIGHT */
+        .emergency-priority-low {
+            color: white !important;
+            /* Se elimina font-weight: 400; */
         }
 
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div id="chatbot-container" class="w-full max-w-lg h-[90vh] md:h-[70vh] bg-white shadow-2xl rounded-2xl flex flex-col overflow-hidden">
+    <div id="chatbot-container" class="w-full max-w-lg h-[90vh] md:h-[70vh] shadow-2xl rounded-2xl flex flex-col overflow-hidden">
         
         <!-- Encabezado de la App -->
-        <header class="bg-red-600 text-white p-4 flex items-center justify-between shadow-md">
+        <header class="app-header text-white p-4 flex items-center justify-between shadow-lg">
             <div class="flex items-center space-x-3">
                 <span class="text-2xl font-bold">QuickSecure</span>
-                <span class="text-sm font-light">Asistente de Emergencias</span>
+                <span class="text-sm font-light text-gray-300">Asistente de Emergencias</span>
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.3 16c-.77 1.333.192 3 1.732 3z" />
+            <!-- Icono de Advertencia/Emergencia (Triángulo titilando) -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-8 w-8 fill-red-600 animate-pulse">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="#dc2626"/> <!-- Rojo intenso -->
+                <line x1="12" y1="9" x2="12" y2="13" stroke="#fef08a"/> <!-- Amarillo claro (Signo !) -->
+                <line x1="12" y1="17" x2="12.01" y2="17" stroke="#fef08a"/> <!-- Amarillo claro (Punto) -->
             </svg>
         </header>
 
-        <!-- Ventana del Chat -->
-        <div id="chat-window" class="flex-grow p-4 space-y-2 flex flex-col">
+        <!-- Ventana del Chat - CLASE APLICADA chat-container -->
+        <div id="chat-window" class="chat-container flex-grow space-y-2">
             <!-- Los mensajes del chat se insertarán aquí -->
         </div>
 
         <!-- Área de Entrada -->
-        <div id="input-area" class="p-4 bg-gray-50 border-t border-gray-200 flex space-x-3">
+        <div id="input-area" class="p-4 flex space-x-3">
             <input type="text" id="user-input" placeholder="Cuéntanos tu emergencia..." autocomplete="off" 
-                   class="flex-grow p-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-500 text-gray-800 disabled:bg-gray-200">
+                   class="flex-grow p-3 rounded-full focus:outline-none focus:ring-2 disabled:bg-gray-700">
             <button id="send-btn" 
-                    class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-full shadow-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="font-semibold py-3 px-6 rounded-full shadow-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Enviar
             </button>
         </div>
@@ -76,7 +253,7 @@
     </div>
 
     <script>
-        // --- LÓGICA DEL CHATBOT (Python a JavaScript) ---
+        // --- LÓGICA DEL CHATBOT ---
 
         // Variables base (Mensajes traducidos)
         const mensajeInicial = (
@@ -84,10 +261,11 @@
             + "Estoy aquí contigo. Por favor, cuéntame lo que está pasando."
         );
 
+        // CAMBIO: Ahora solo se aplica negrita a las partes importantes
         const mensajeConfirmacion = (
             "Gracias por informarme.\n"
-            + "🚨 Ya estoy notificando a las entidades de emergencia correspondientes.\n"
-            + "🛰️ Tenemos tu ubicación en todo momento y los equipos están en camino.\n"
+            + "🚨 Ya estoy **notificando a las entidades de emergencia** correspondientes.\n"
+            + "🛰️ Tenemos tu ubicación en todo momento y los **equipos están en camino**.\n"
             + "Mantén la calma, no estás solo/a. Estoy contigo hasta que lleguen."
         );
 
@@ -95,6 +273,9 @@
             "✅ La comunicación se ha cerrado.\n"
             + "Si necesitas ayuda nuevamente, solo vuelve a escribirme.\n"
         );
+        
+        // MENSAJES Y LISTAS DE CLASIFICACIÓN
+        const mensajeSaludo = "¡Hola! Entiendo que tienes una emergencia. Por favor, **sé lo más específico posible** sobre lo que está ocurriendo (ej: robo, fuego, me siento mal) para que pueda enviar la ayuda correcta.";
 
         // Lista de despedidas comunes
         const despedidas = [
@@ -103,7 +284,49 @@
             "ok","okei","okay","vale","listo","dale","bueno","ya fue","gracias",
             "estoy bien","todo bien","no más","gracias bot","terminar","salir","ya"
         ];
+        
+        // Lista de saludos simples
+        const saludos = ["hola", "buenos dias", "buenas tardes", "buenas noches", "que tal", "hello", "hi"];
 
+        // Categorías de emergencia (keywords) - LISTAS EXPANDIDAS
+        
+        // Palabras clave para Policía / Seguridad Ciudadana (PRIORIDAD ALTA - emergency-priority-high)
+        const emergenciasPoliciales = [
+            "robo", "atraco", "asalto", "violencia", "mataron", "disparo", "secuestro", 
+            "pelea", "delito", "sospechoso", "ladron", "policia", "asesinato", "agresion", 
+            "vandalismo", "allanamiento", "extorsion", "amenaza", "pandilla", "banda", 
+            "arma", "captura", "crimen", "escape", "fugitivo", "detener", "hurto", 
+            "ofensa", "disturbio", "seguridad", "carcel", "juez", "denuncia", "asalto"
+        ];
+        
+        // Palabras clave para Bomberos / Rescate (PRIORIDAD CRÍTICA - emergency-priority-critical)
+        const emergenciasBomberos = [
+            "fuego", "incendio", "quemando", "humo", "escape de gas", "atrapado", 
+            "inundacion", "derrumbe", "explosión", "bomberos", "rescate", "quimico", 
+            "estructura", "peligro", "llamas", "colapso", "derramamiento", "gases", 
+            "cortocircuito", "tormenta", "desastre", "sismo", "terremoto", "colgado", 
+            "altura", "rescate animal", "goteando", "tubería", "cable", "arbol caido", "rescatar"
+        ];
+        
+        // Palabras clave para Ambulancias / Emergencias Médicas (PRIORIDAD CRÍTICA - emergency-priority-critical)
+        const emergenciasMedicas = [
+            "accidente", "herido", "enfermo", "infarto", "paro cardiaco", "desmayo", 
+            "ambulancia", "medico", "caida", "sangre", "urgencia", "golpe", "fractura", 
+            "convulsiones", "ayuda medica", "hemorragia", "asfixia", "dolor", "epilepsia", 
+            "parto", "intoxicacion", "veneno", "aplastamiento", "fiebre", "desvanecimiento", 
+            "vomito", "respirar", "quemadura", "critico", "desangrando", "pestilencia", "mal olor", 
+            "desnutrición", "mareo", "consciencia", "desmayarse"
+        ];
+        
+        // Palabras clave para Tránsito / Accidentes Viales (PRIORIDAD MEDIA - emergency-priority-medium)
+        const emergenciasTransito = [
+            "accidente de transito", "choque", "via bloqueada", "semáforo", "atropello", 
+            "transito", "carretera", "bloqueo", "vehiculo", "carro", "moto", "coche", 
+            "automovil", "congestion", "deslizamiento", "puente", "cruce", "patrulla", 
+            "averia", "paralizado", "cierre vial", "muro", "despiste", "frenos", "bus", "camion", 
+            "trafico", "vial", "conductor"
+        ];
+        
         // Elementos del DOM
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
@@ -115,67 +338,121 @@
         // --- Funciones de Utilidad ---
 
         /**
-         * Limpia el texto (equivalente a limpiar_texto en Python).
-         * Elimina puntuación y convierte a minúsculas, manejando caracteres especiales españoles.
-         * @param {string} texto - Texto de entrada.
-         * @returns {string} - Texto limpio y en minúsculas.
+         * Limpia el texto para el análisis de palabras clave.
          */
         function limpiarTexto(texto) {
             if (!texto) {
                 return "";
             }
             let textoLimpio = texto.toLowerCase();
-            // Reemplaza todo lo que no sea letra (a-z, áéíóúñ), número (\d), o espacio (\s) por un espacio.
+            // Permite solo letras, números y espacios
             textoLimpio = textoLimpio.replace(/[^\w\sáéíóúñ]/g, ' ').trim();
-            // Elimina múltiples espacios
             textoLimpio = textoLimpio.replace(/\s+/g, ' '); 
             return textoLimpio;
         }
+        
+        /**
+         * Determina la respuesta contextual y la CLASE DE ESTILO DE PRIORIDAD.
+         * @returns {{respuesta: string|null, clase: string|null}} - Objeto con la respuesta y la clase CSS.
+         */
+        function getContextualResponse(textoLimpio) {
+            let respuesta = null;
+            let clase = null;
+
+            // Prioridad 1: Bomberos / Rescate (CRÍTICA)
+            if (emergenciasBomberos.some(p => textoLimpio.includes(p))) {
+                respuesta = "🔥 **EMERGENCIA:** Emergencia de **Fuego/Rescate** detectada. Ya hemos notificado a los **Bomberos**. Por favor, indícanos si hay heridos o personas atrapadas y la dirección del viento.";
+                clase = 'emergency-priority-critical';
+            }
+            // Prioridad 2: Médica / Sanitaria (CRÍTICA)
+            else if (emergenciasMedicas.some(p => textoLimpio.includes(p))) {
+                respuesta = "🚑 **URGENTE:** Emergencia **Médica/Sanitaria** detectada. Ya hemos solicitado una **Ambulancia**. Por favor, dinos el estado de conciencia de la persona afectada y su edad aproximada.";
+                clase = 'emergency-priority-critical';
+            }
+            // Prioridad 3: Policía / Seguridad Ciudadana (ALTA)
+            else if (emergenciasPoliciales.some(p => textoLimpio.includes(p))) {
+                respuesta = "👮 **ALARMA:** Emergencia de **Seguridad Ciudadana** detectada. Ya hemos notificado a la **Policía**. Por favor, describe la situación y la apariencia de los involucrados.";
+                clase = 'emergency-priority-high';
+            }
+            // Prioridad 4: Tránsito / Vial (MEDIA)
+            else if (emergenciasTransito.some(p => textoLimpio.includes(p))) {
+                respuesta = "🚨 **ATENCIÓN:** Emergencia de **Tránsito/Vial** detectada. Ya hemos notificado a las autoridades de **Tránsito**. Indica si hay heridos, si el tráfico está completamente bloqueado, o si hay un derrame de combustible.";
+                clase = 'emergency-priority-medium';
+            }
+            
+            return { respuesta, clase };
+        }
+
 
         /**
-         * Función principal del bot (equivalente a responder en Python).
-         * @param {string} texto - Mensaje del usuario.
-         * @param {number|null} lat - Latitud.
-         * @param {number|null} lon - Longitud.
-         * @returns {string} - Respuesta del chatbot.
+         * Función principal del bot.
          */
         function responder(texto, lat = null, lon = null) {
             const textoLimpio = limpiarTexto(texto);
+            const { respuesta, clase } = getContextualResponse(textoLimpio);
+
+            let respuestaFinal = null;
+            let claseFinal = null;
 
             // 1. Verificación de despedidas
             if (despedidas.some(p => textoLimpio.includes(p))) {
-                return mensajeDespedida;
+                respuestaFinal = mensajeDespedida;
+                claseFinal = 'emergency-priority-low';
             } 
-            // 2. Verificación de mensaje vacío (o solo espacios)
+            // 2. Verificación de mensaje vacío
             else if (textoLimpio === "") {
-                // Esta lógica se usa principalmente si el usuario pulsa Enter en un campo vacío
-                // y el código de Python lo espera. En el front-end es más común prevenir el envío.
-                return mensajeInicial;
+                respuestaFinal = mensajeInicial;
+                claseFinal = 'bot'; // Por defecto, usa el color azul/cian
             } 
-            // 3. Respuesta de emergencia (el corazón del bot)
-            else {
-                if (lat !== null && lon !== null) {
-                    // La ubicación se formatea a 4 decimales
-                    return (mensajeConfirmacion 
-                            + `\n📍 Recibimos tu ubicación: lat ${lat.toFixed(4)}, lon ${lon.toFixed(4)}.`);
-                } else {
-                    return mensajeConfirmacion;
-                }
+            // 3. Verificación de saludos simples
+            else if (saludos.some(p => textoLimpio === p) || saludos.some(p => textoLimpio.startsWith(p + " ") && textoLimpio.length < p.length + 15)) {
+                respuestaFinal = mensajeSaludo;
+                claseFinal = 'emergency-priority-low';
             }
+            // 4. Procesamiento de emergencia (Clasificada)
+            else if (respuesta) {
+                // Generar confirmación con ubicación
+                let fullConfirmation = mensajeConfirmacion;
+                if (lat !== null && lon !== null) {
+                    fullConfirmation += `\n📍 Recibimos tu ubicación: lat ${lat.toFixed(4)}, lon ${lon.toFixed(4)}.`;
+                }
+                
+                respuestaFinal = respuesta + "\n\n---\n" + fullConfirmation;
+                claseFinal = clase; // Usa la clase de prioridad obtenida
+            }
+            // 5. Default: Confirmación genérica (No clasificada, pero es una emergencia)
+            else {
+                let fullConfirmation = mensajeConfirmacion;
+                if (lat !== null && lon !== null) {
+                    fullConfirmation += `\n📍 Recibimos tu ubicación: lat ${lat.toFixed(4)}, lon ${lon.toFixed(4)}.`;
+                }
+                respuestaFinal = fullConfirmation;
+                claseFinal = 'emergency-priority-high'; // Usar High como genérico de emergencia
+            }
+
+            return { respuesta: respuestaFinal, clase: claseFinal };
         }
 
         /**
-         * Renderiza un mensaje en la ventana del chat.
-         * @param {string} texto - El contenido del mensaje.
-         * @param {string} remitente - 'bot' o 'user'.
+         * Renderiza un mensaje en la ventana del chat con su clase de estilo.
          */
-        function agregarMensaje(texto, remitente) {
+        function agregarMensaje(texto, remitente, claseAdicional = null) {
             const mensajeDiv = document.createElement('div');
-            mensajeDiv.classList.add('message', `${remitente}-message`);
-            // Reemplaza \n por <br> para saltos de línea en HTML
-            mensajeDiv.innerHTML = texto.replace(/\n/g, '<br>'); 
+            
+            // La clase base ahora es 'user' o 'bot' para aplicar los gradientes definidos
+            let claseBase = remitente === 'bot' ? 'bot' : 'user';
+            
+            mensajeDiv.classList.add('message', claseBase);
+            
+            // Si es un bot y tiene una clase de prioridad, la añade (esto sobrescribirá el estilo de .message.bot)
+            if (remitente === 'bot' && claseAdicional) {
+                mensajeDiv.classList.add(claseAdicional);
+            }
+
+            // Usamos innerHTML para permitir negritas y saltos de línea
+            mensajeDiv.innerHTML = `<div class="message-content">${texto.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>`; 
+            
             chatWindow.appendChild(mensajeDiv);
-            // Hace scroll automático al final
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
@@ -188,7 +465,6 @@
         function procesarMensaje() {
             const textoUsuario = userInput.value.trim();
             
-            // Ignorar si el campo está vacío o el chat está cerrado
             if (textoUsuario === '' || userInput.disabled) {
                 return;
             }
@@ -205,7 +481,7 @@
             const lat = ubicacion.lat;
             const lon = ubicacion.lon;
             
-            const respuestaBot = responder(textoUsuario, lat, lon);
+            const { respuesta: respuestaBot, clase: claseBot } = responder(textoUsuario, lat, lon);
 
             setTimeout(() => {
                 // Habilitar entrada
@@ -213,7 +489,7 @@
                 sendBtn.disabled = false;
                 userInput.focus();
 
-                agregarMensaje(respuestaBot, 'bot');
+                agregarMensaje(respuestaBot, 'bot', claseBot);
                 
                 // Cerrar chat si el mensaje es de despedida
                 if (respuestaBot === mensajeDespedida) {
@@ -225,47 +501,22 @@
         }
 
         /**
-         * Intenta obtener la ubicación real del usuario.
+         * Fija la ubicación simulada.
          */
         function obtenerUbicacion() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        // Ubicación obtenida
-                        ubicacion.lat = position.coords.latitude;
-                        ubicacion.lon = position.coords.longitude;
-                        console.log("Ubicación obtenida:", ubicacion);
-                        // No notificamos al usuario para no saturar, solo la usamos si es una emergencia.
-                    },
-                    (error) => {
-                        // Error o denegación de ubicación (simulación de fallo)
-                        ubicacion.lat = 4.7110; // Ubicación por defecto de ejemplo
-                        ubicacion.lon = -74.0721;
-                        console.error("Error al obtener ubicación. Usando ubicación por defecto.", error.message);
-                    },
-                    { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-                );
-            } else {
-                // Navegador no soporta Geolocalización
-                ubicacion.lat = 4.7110;
-                ubicacion.lon = -74.0721;
-                console.warn("Geolocalización no soportada por el navegador. Usando ubicación por defecto.");
-            }
+            // Ubicación por defecto de ejemplo: Bogotá
+            ubicacion.lat = 4.7110; 
+            ubicacion.lon = -74.0721;
+            console.warn("Geolocalización real bloqueada. Usando ubicación de ejemplo para QuickSecure.");
         }
 
 
         // Asignación de Eventos al cargar la página
         window.onload = () => {
-            // Intentar obtener la ubicación real (o usar la de ejemplo)
             obtenerUbicacion();
-
-            // Mensaje de bienvenida del bot
             agregarMensaje(mensajeInicial, 'bot');
 
-            // Escuchar click en el botón
             sendBtn.addEventListener('click', procesarMensaje);
-
-            // Escuchar tecla Enter en el campo de texto
             userInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter' && !userInput.disabled) {
                     procesarMensaje();
